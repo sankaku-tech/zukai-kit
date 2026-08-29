@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>図解テンプレート</title>
+
+<!--
+  ==========================================================================
+  図解キット template.html
+  --------------------------------------------------------------------------
+  AIに「HTMLで出力して」と頼んだ答えを、読める1枚に落とすための器。
+  <body> の「ここから下を差し替える」以降だけを書き換える。
+  :root のトークンと components 層、テーマ確定スクリプトは触らない。
+  土台: Linear Base v1.1（00_Context/site-design-spec参照/linear-base.html）
+  ==========================================================================
+-->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+
+<style>
+/* ==========================================================================
+   1. TOKENS — 仕様書の front matter をそのまま写した層。ここは編集しない
+   ========================================================================== */
+:root{
+  /* --- Surface ladder ---
+     Linear は影を使わず「面を1段ずつ持ち上げる」ことで階層を作る。
+     canvas → s1 → s2 → s3 → s4 の順に明るくなる。段を飛ばさないこと。 */
+  --canvas:#010102;      /* 真っ黒(#000)ではない。青みを残すのが仕様 */
+  --s1:#0f1011;          /* カード・パネルの既定 */
+  --s2:#141516;          /* 強調カード / hover */
+  --s3:#18191a;          /* サブナビ・ドロップダウン */
+  --s4:#191a1b;          /* 最上位の持ち上げ面 */
+
+  /* --- Hairline --- 影の代わりに階層を支える1px罫 */
+  --hair:#23252a;
+  --hair-strong:#34343a; /* 入力欄・強調境界 */
+  --hair-3:#3e3e44;      /* 入れ子の面の境界 */
+
+  /* --- Ink（文字）--- 4段。それ以上増やさない */
+  --ink:#f7f8f8;         /* 見出し・本文 */
+  --ink-muted:#d0d6e0;   /* 副次情報 */
+  --ink-subtle:#8a8f98;  /* 三次情報・非選択タブ・フッター */
+  --ink-3:#62666d;       /* 無効・脚注 */
+
+  /* --- Accent --- ラベンダー1色のみ。第2の有彩色を足さないこと。
+     使ってよい場所: ブランドマーク / 主CTA / フォーカスリング / リンク強調 */
+  --accent:#5e6ad2;
+  --accent-hover:#828fff;
+  --accent-focus:#5e69d1;
+  --success:#27a644;     /* 唯一の意味色。ステータスピルのみ */
+
+  /* --- Radius --- ボタンは必ず8px。ピル型のCTAは禁止 */
+  --r-xs:4px; --r-sm:6px; --r-md:8px; --r-lg:12px; --r-xl:16px; --r-xxl:24px;
+  --r-pill:9999px;
+
+  /* --- Spacing --- 基準4px */
+  --sp-xxs:4px; --sp-xs:8px; --sp-sm:12px; --sp-md:16px;
+  --sp-lg:24px; --sp-xl:32px; --sp-xxl:48px; --sp-sec:96px;
+
+  /* --- Font ---
+     Linear の自社書体は非公開。仕様書が推奨する Inter を代替に使う。 */
+  --font:'Inter','Noto Sans JP',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
+
+  /* --- Tracking ---
+     仕様書の px 値（display-xl で -3.0px）は SF Pro 前提。
+     Inter は字面が違うので約2割ゆるめた em 値にしている。
+     px 直書きにしないのは clamp() で字が縮んだとき詰まりすぎるため。 */
+  --tr-xl:-0.030em; --tr-lg:-0.028em; --tr-md:-0.022em;
+  --tr-head:-0.020em; --tr-card:-0.018em; --tr-sub:-0.010em;
+  --tr-body:-0.003em; --tr-eyebrow:0.03em;
+
+  --maxw:1280px;         /* コンテンツ最大幅 */
+
+  /* --- テーマ差分に使う小物 ---
+     ライトでは意味が変わる／効かないものはトークンに逃がしておく。
+     ここを直接ハードコードすると、ライトに切り替えたとき1か所だけ浮く。 */
+  --panel-hi:rgba(255,255,255,.04);   /* 持ち上げた面の上端ハイライト */
+  --on-accent:#fff;                   /* アクセント面に乗せる文字 */
+  --inverse-bg:#fff; --inverse-fg:#000; --inverse-bg-hover:#f5f6f6;
+}
+
+/* ==========================================================================
+   1b. LIGHT — :root[data-theme="light"] で上書きする。
+   実際に当たるテーマは <head> のスクリプトが描画前に確定させる。
+   --------------------------------------------------------------------------
+   ダークは「canvas → s1 → s2 と明るくして持ち上げる」が、白地では明るくする
+   余地がないので向きを反転させる（白い紙 → 少しグレーのカード）。
+   「s2 のほうが s1 より前に出る」という段の意味は同じなので、
+   components 層は一切書き換えずに済む。
+   ========================================================================== */
+:root[data-theme="light"]{
+  --canvas:#ffffff; --s1:#f8f9fa; --s2:#f1f2f4; --s3:#ebecef; --s4:#e8e9ec;
+  --hair:#e4e6e9; --hair-strong:#d0d3d8; --hair-3:#b6bac1;
+  --ink:#101113; --ink-muted:#3f434a; --ink-subtle:#6b7078; --ink-3:#9096a0;
+  /* アクセントの色相は変えない。ホバーは白地では「濃くなる」方向にする */
+  --accent:#5e6ad2; --accent-hover:#4b57c4; --accent-focus:#5e69d1; --success:#1a8a37;
+  --panel-hi:rgba(255,255,255,0);
+  --on-accent:#fff;
+  --inverse-bg:#101113; --inverse-fg:#ffffff; --inverse-bg-hover:#2a2d33;
+}
+
+/* ==========================================================================
+   2. RESET & BASE
+   ========================================================================== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:var(--canvas);
+  color:var(--ink);
+  font-family:var(--font);
+  font-size:16px; line-height:1.5; letter-spacing:var(--tr-body);
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+img,svg{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+button,input,select,textarea{font:inherit;color:inherit}
+
+/* フォーカスリング: 仕様書 Elevation Lv4。全対話要素で共通 */
+:focus-visible{
+  outline:2px solid color-mix(in srgb,var(--accent-focus) 50%,transparent);
+  outline-offset:2px;
+  border-radius:var(--r-xs);
+}
+
+/* ==========================================================================
+   3. TYPOGRAPHY — 階層は13段で固定。新しいサイズを勝手に増やさない
+   ========================================================================== */
+.display-xl{font-size:clamp(2.25rem,5.5vw + .6rem,5rem);   font-weight:600;line-height:1.05;letter-spacing:var(--tr-xl)}
+.display-lg{font-size:clamp(1.875rem,3.6vw + .6rem,3.5rem);font-weight:600;line-height:1.10;letter-spacing:var(--tr-lg)}
+.display-md{font-size:clamp(1.5rem,2.2vw + .7rem,2.5rem);  font-weight:600;line-height:1.15;letter-spacing:var(--tr-md)}
+.headline  {font-size:clamp(1.375rem,1.4vw + .9rem,1.75rem);font-weight:600;line-height:1.20;letter-spacing:var(--tr-head)}
+.card-title{font-size:1.375rem;font-weight:500;line-height:1.25;letter-spacing:var(--tr-card)}
+.subhead   {font-size:1.25rem; font-weight:400;line-height:1.40;letter-spacing:var(--tr-sub);color:var(--ink-muted)}
+.body-lg   {font-size:1.125rem;font-weight:400;line-height:1.50}
+.body      {font-size:1rem;    font-weight:400;line-height:1.50}
+.body-sm   {font-size:.875rem; font-weight:400;line-height:1.50}
+.caption   {font-size:.75rem;  font-weight:400;line-height:1.40;color:var(--ink-subtle)}
+.mono      {font-family:var(--font-mono);font-size:.8125rem;line-height:1.5}
+
+/* eyebrow だけ正の字送り。display の負の字送りと対比させて「分類」に見せる */
+.eyebrow{
+  font-size:.8125rem;font-weight:500;line-height:1.3;
+  letter-spacing:var(--tr-eyebrow);
+  color:var(--accent);
+  text-transform:uppercase;
+}
+.muted{color:var(--ink-subtle)}
+.dim{color:var(--ink-3)}
+
+/* ==========================================================================
+   4. LAYOUT
+   ========================================================================== */
+.container{max-width:var(--maxw);margin-inline:auto;padding-inline:var(--sp-lg)}
+/* nav が sticky 56px なので、アンカー遷移で見出しが隠れないよう逃がす */
+.section{padding-block:var(--sp-sec);scroll-margin-top:72px}
+.stack-xs > * + *{margin-top:var(--sp-xs)}
+.stack-sm > * + *{margin-top:var(--sp-sm)}
+.stack   > * + *{margin-top:var(--sp-md)}
+.stack-lg> * + *{margin-top:var(--sp-lg)}
+.stack-xl> * + *{margin-top:var(--sp-xl)}
+.row{display:flex;align-items:center;gap:var(--sp-sm);flex-wrap:wrap}
+.row-between{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-md);flex-wrap:wrap}
+
+/* カードグリッド: 3-up → 1024pxで2-up → 768pxで1-up（仕様書 Responsive） */
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-md)}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--sp-md)}
+
+/* ==========================================================================
+   5. COMPONENTS
+   ========================================================================== */
+
+/* --- Buttons ------------------------------------------------------------
+   共通: 14px/500・padding 8px 14px・角丸8px。タップ高は40px以上を確保 */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-xs);
+  min-height:40px;padding:var(--sp-xs) 14px;
+  font-size:.875rem;font-weight:500;line-height:1.2;letter-spacing:0;
+  border:1px solid transparent;border-radius:var(--r-md);
+  cursor:pointer;transition:background-color .15s ease,border-color .15s ease,color .15s ease;
+  white-space:nowrap;
+}
+.btn-primary  {background:var(--accent);color:var(--on-accent)}
+.btn-primary:hover {background:var(--accent-hover)}
+.btn-primary:active{background:var(--accent-focus)}
+.btn-secondary{background:var(--s1);color:var(--ink);border-color:var(--hair)}
+.btn-secondary:hover{background:var(--s2);border-color:var(--hair-strong)}
+.btn-tertiary {background:transparent;color:var(--ink-muted)}
+.btn-tertiary:hover{background:var(--s1);color:var(--ink)}
+.btn-inverse  {background:var(--inverse-bg);color:var(--inverse-fg)}
+.btn-inverse:hover{background:var(--inverse-bg-hover)}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.btn-sm{min-height:32px;padding:6px 10px;font-size:.8125rem}
+
+/* --- Panel（あらゆるカードの土台）--------------------------------------
+   影は使わない。面の持ち上げ + 1px罫 + 上端の白ハイライトだけで奥行きを出す。
+   inset の白1pxが仕様書の "subtle white edge highlight"。 */
+.panel{
+  background:var(--s1);
+  border:1px solid var(--hair);
+  border-radius:var(--r-lg);
+  padding:var(--sp-lg);
+  box-shadow:inset 0 1px 0 var(--panel-hi);
+}
+.panel-lift{background:var(--s2);border-color:var(--hair-strong)}      /* Lv2 */
+.panel-wide{border-radius:var(--r-xl)}                                  /* 製品UIパネル */
+.panel-cta {padding:var(--sp-xxl)}
+.panel-quote{padding:var(--sp-xl);font-size:1.125rem;line-height:1.5}
+
+/* hover で反応させたいカードだけ .panel-hover を足す */
+.panel-hover{transition:background-color .15s ease,border-color .15s ease}
+.panel-hover:hover{background:var(--s2);border-color:var(--hair-strong)}
+
+/* --- Badge / Pill ------------------------------------------------------- */
+.badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--s2);color:var(--ink-muted);
+  font-size:.75rem;line-height:1.4;
+  padding:2px 8px;border-radius:var(--r-pill);border:1px solid var(--hair);
+}
+.badge-success{color:var(--ink)}
+.badge-success::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--success)}
+
+/* --- Tabs（ピル型トグル）----------------------------------------------- */
+.tabs{display:inline-flex;gap:var(--sp-xxs);background:var(--canvas);
+      border:1px solid var(--hair);border-radius:var(--r-pill);padding:var(--sp-xxs)}
+.tab{
+  min-height:36px;padding:6px 14px;border:0;border-radius:var(--r-pill);
+  background:transparent;color:var(--ink-subtle);
+  font-size:.875rem;font-weight:500;cursor:pointer;transition:.15s ease;
+}
+.tab[aria-selected="true"]{background:var(--s2);color:var(--ink)}
+
+/* --- Theme switch（システム／ライト／ダークの3択・必須コンポーネント）----
+   押されている状態は data-theme-pref の属性セレクタで表す。JSで
+   aria-pressed を同期させる必要がなく、描画前のちらつきも出ない。 */
+.theme-switch{display:inline-flex;gap:2px;background:var(--canvas);
+  border:1px solid var(--hair);border-radius:var(--r-pill);padding:2px}
+.theme-opt{width:30px;height:30px;border:0;border-radius:var(--r-pill);
+  background:transparent;color:var(--ink-3);cursor:pointer;
+  display:grid;place-items:center;transition:background-color .15s ease,color .15s ease}
+.theme-opt:hover{color:var(--ink-muted)}
+:root[data-theme-pref="system"] .theme-opt[data-theme-set="system"],
+:root[data-theme-pref="light"]  .theme-opt[data-theme-set="light"],
+:root[data-theme-pref="dark"]   .theme-opt[data-theme-set="dark"]{background:var(--s2);color:var(--ink)}
+
+/* --- Form --------------------------------------------------------------- */
+.field{display:block}
+.label{display:block;font-size:.875rem;font-weight:500;color:var(--ink-muted);margin-bottom:6px}
+.input,.select,.textarea{
+  width:100%;min-height:44px;                 /* タッチ44px確保 */
+  background:var(--s1);color:var(--ink);
+  border:1px solid var(--hair);border-radius:var(--r-md);
+  padding:var(--sp-xs) var(--sp-sm);
+  transition:border-color .15s ease;
+}
+.textarea{min-height:96px;resize:vertical;padding-block:var(--sp-sm)}
+.input::placeholder,.textarea::placeholder{color:var(--ink-3)}
+.input:hover,.select:hover,.textarea:hover{border-color:var(--hair-strong)}
+.input:focus,.select:focus,.textarea:focus{
+  border-color:var(--accent-focus);
+  outline:2px solid color-mix(in srgb,var(--accent-focus) 50%,transparent);
+  outline-offset:0;
+}
+.hint{font-size:.75rem;color:var(--ink-3);margin-top:6px}
+
+/* --- Table（業務ツール用。仕様書には無いが同じトークンで構成）---------- */
+.table-wrap{border:1px solid var(--hair);border-radius:var(--r-lg);overflow:hidden}
+.table{width:100%;border-collapse:collapse;font-size:.875rem}
+.table th{
+  background:var(--s1);color:var(--ink-subtle);
+  font-weight:500;text-align:left;
+  padding:var(--sp-sm) var(--sp-md);
+  border-bottom:1px solid var(--hair);white-space:nowrap;
+}
+.table td{padding:var(--sp-sm) var(--sp-md);border-bottom:1px solid var(--hair)}
+.table tbody tr:last-child td{border-bottom:0}
+.table tbody tr:hover{background:var(--s1)}
+.table .num{text-align:right;font-variant-numeric:tabular-nums}
+
+/* --- Row（changelog / リスト行）----------------------------------------- */
+.row-item{padding:var(--sp-lg) 0;border-bottom:1px solid var(--hair)}
+.row-item:last-child{border-bottom:0}
+
+/* --- Nav ---------------------------------------------------------------- */
+.nav{
+  position:sticky;top:0;z-index:50;
+  height:56px;background:color-mix(in srgb,var(--canvas) 82%,transparent);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--hair);
+}
+.nav-inner{max-width:var(--maxw);margin-inline:auto;height:100%;
+           padding-inline:var(--sp-lg);display:flex;align-items:center;gap:var(--sp-lg)}
+.brand{display:flex;align-items:center;gap:var(--sp-xs);font-weight:600;letter-spacing:var(--tr-card)}
+.brand-mark{width:20px;height:20px;border-radius:var(--r-sm);background:var(--accent);flex:none}
+.nav-links{display:flex;gap:var(--sp-lg);margin-left:var(--sp-md)}
+.nav-links a{font-size:.875rem;color:var(--ink-subtle);transition:color .15s ease}
+.nav-links a:hover{color:var(--ink)}
+.nav-actions{margin-left:auto;display:flex;gap:var(--sp-xs)}
+.nav-toggle{display:none;background:transparent;border:1px solid var(--hair);
+            border-radius:var(--r-md);width:36px;height:36px;cursor:pointer}
+
+/* --- Footer ------------------------------------------------------------- */
+.footer{border-top:1px solid var(--hair);padding:64px var(--sp-xl);color:var(--ink-subtle);font-size:.75rem}
+.footer-grid{max-width:var(--maxw);margin-inline:auto;display:grid;
+             grid-template-columns:1.5fr repeat(3,1fr);gap:var(--sp-xl)}
+.footer a{display:block;padding:5px 0;color:var(--ink-subtle);transition:color .15s ease}
+.footer a:hover{color:var(--ink)}
+.footer h4{font-size:.75rem;font-weight:500;color:var(--ink);margin-bottom:var(--sp-xs)}
+
+/* --- 製品UIモック -------------------------------------------------------
+   仕様書は「製品UIのスクショが主役」と言うが、単一HTMLなら画像を貼るより
+   UIそのものをHTMLで描くほうが軽く、拡大しても劣化しない。 */
+.mock{background:var(--canvas);border:1px solid var(--hair);border-radius:var(--r-md);overflow:hidden}
+.mock-bar{display:flex;align-items:center;gap:6px;padding:10px var(--sp-sm);border-bottom:1px solid var(--hair)}
+.mock-dot{width:9px;height:9px;border-radius:50%;background:var(--hair-3)}
+.mock-row{display:flex;align-items:center;gap:var(--sp-sm);
+          padding:10px var(--sp-md);border-bottom:1px solid var(--hair);font-size:.8125rem}
+.mock-row:last-child{border-bottom:0}
+.mock-id{font-family:var(--font-mono);font-size:.75rem;color:var(--ink-3);width:64px;flex:none}
+.mock-tag{margin-left:auto;flex:none}
+
+/* ==========================================================================
+   6. RESPONSIVE — 仕様書の breakpoint に合わせる
+   ========================================================================== */
+@media (max-width:1024px){
+  .grid-3{grid-template-columns:repeat(2,1fr)}
+  .footer-grid{grid-template-columns:1fr 1fr}
+}
+@media (max-width:768px){
+  :root{--sp-sec:64px}
+  .grid-3,.grid-2{grid-template-columns:1fr}
+  .nav-links{display:none;position:absolute;top:56px;left:0;right:0;
+             flex-direction:column;gap:0;background:var(--s1);
+             border-bottom:1px solid var(--hair);padding:var(--sp-sm) var(--sp-lg);margin:0}
+  .nav-links.open{display:flex}
+  .nav-links a{padding:var(--sp-sm) 0}
+  .nav-toggle{display:block}
+  /* 3択スイッチは幅を食うので、狭い画面では詰める。
+     390px でブランド＋スイッチ＋主ボタン＋メニューが並びきる寸法にしてある */
+  .theme-opt{width:26px;height:26px}
+  .brand{font-size:.9375rem}
+  /* テーマスイッチは必須なので落とせない。代わりに優先度の低いナビ要素へ
+     .nav-hide-sm を付けて逃がす（下の「サインイン」がその例）。 */
+  .nav-hide-sm{display:none !important}
+  .panel-cta{padding:var(--sp-xl)}
+  .footer-grid{grid-template-columns:1fr}
+}
+
+/* 動きを減らす設定を尊重する */
+@media (prefers-reduced-motion:reduce){
+  *{transition-duration:.01ms !important;animation-duration:.01ms !important}
+}
+</style>
+
+<script>
+/* ==========================================================================
+   テーマ確定 — CSSより後・body描画より前に必ず走らせる
+   --------------------------------------------------------------------------
+   ここで data-theme を決めないと、一瞬ダークで描いてから白に飛ぶ（逆も同じ）。
+   pref = system / light / dark を持ち、system のときだけ OS 設定に追従する。
+   localStorage が使えない環境（プライベートウィンドウ等）でも落ちないようにする。
+   ★ 別ファイルにコピーするときは THEME_KEY をその画面固有の名前に変えること。
+   ========================================================================== */
+(function () {
+  var THEME_KEY = 'zukai-theme';
+  function readPref() {
+    try { var v = localStorage.getItem(THEME_KEY);
+      if (v === 'light' || v === 'dark' || v === 'system') return v; } catch (e) {}
+    return 'system';
+  }
+  function resolve(pref) {
+    if (pref === 'light' || pref === 'dark') return pref;
+    return (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+  }
+  function apply(pref) {
+    var r = document.documentElement;
+    r.setAttribute('data-theme-pref', pref);
+    r.setAttribute('data-theme', resolve(pref));
+  }
+  apply(readPref());
+
+  // 3択ボタンの配線と、system のときの OS 追従。DOM構築後に一度だけ行う
+  document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('[data-theme-set]') : null;
+      if (!b) return;
+      var pref = b.getAttribute('data-theme-set');
+      try { localStorage.setItem(THEME_KEY, pref); } catch (err) {}
+      apply(pref);
+    });
+  });
+  if (window.matchMedia) {
+    var mq = window.matchMedia('(prefers-color-scheme: light)');
+    var follow = function () { if (readPref() === 'system') apply('system'); };
+    if (mq.addEventListener) mq.addEventListener('change', follow); else mq.addListener(follow);
+  }
+})();
+</script>
+
+<style>
+/* ==========================================================================
+   7. 図解レイヤー — 上の components 層には手を入れず、ここだけ足している
+   --------------------------------------------------------------------------
+   影は使わない／有彩色はラベンダー(--accent)1色だけ／角丸はトークン経由。
+   ここのクラスはすべて zk- 接頭辞。既存クラスと衝突させないため。
+   ========================================================================== */
+
+/* --- 図解1つ分の入れ物。見出し＋中身をセットで扱う ---------------------- */
+.zk-block{margin-top:var(--sp-xl)}
+.zk-block > * + *{margin-top:var(--sp-md)}
+
+/* --- 手順（縦に積む番号つきステップ）------------------------------------
+   番号の丸を左に固定し、その中心を通る縦罫で「つながり」を出す。
+   矢印画像を使わないのは、テーマを切り替えたとき色が追従しないため。 */
+.zk-steps{list-style:none;counter-reset:zk;padding:0}
+.zk-steps > li{
+  position:relative;counter-increment:zk;
+  padding:0 0 var(--sp-lg) 44px;
+}
+.zk-steps > li:last-child{padding-bottom:0}
+.zk-steps > li::before{                    /* 番号の丸 */
+  content:counter(zk);
+  position:absolute;left:0;top:0;
+  width:28px;height:28px;border-radius:50%;
+  display:grid;place-items:center;
+  background:var(--s2);border:1px solid var(--hair-strong);
+  color:var(--ink);font-family:var(--font-mono);font-size:.8125rem;
+}
+.zk-steps > li::after{                     /* 丸と丸をつなぐ縦罫 */
+  content:"";position:absolute;left:14px;top:28px;bottom:0;
+  width:1px;background:var(--hair);
+}
+.zk-steps > li:last-child::after{display:none}
+.zk-step-t{font-size:1rem;font-weight:500;line-height:1.4;letter-spacing:var(--tr-card)}
+.zk-step-d{font-size:.875rem;line-height:1.6;color:var(--ink-muted);margin-top:6px}
+
+/* --- 流れ（横に並ぶ箱＋矢印）--------------------------------------------
+   矢印は擬似要素の文字。狭い画面では縦積みになるので、
+   そのとき矢印も下向きに回す（transform で回すだけ・別要素を足さない）。 */
+.zk-flow{display:flex;align-items:stretch;gap:var(--sp-sm);flex-wrap:wrap}
+.zk-flow > .zk-node{
+  flex:1 1 160px;min-width:0;
+  background:var(--s1);border:1px solid var(--hair);border-radius:var(--r-md);
+  padding:var(--sp-md);
+  box-shadow:inset 0 1px 0 var(--panel-hi);
+}
+.zk-node-t{font-size:.9375rem;font-weight:500;line-height:1.35}
+.zk-node-d{font-size:.8125rem;line-height:1.55;color:var(--ink-subtle);margin-top:4px}
+.zk-node + .zk-node{position:relative}
+.zk-node + .zk-node::before{
+  content:"→";position:absolute;left:calc(var(--sp-sm) * -1);top:50%;
+  transform:translate(-2px,-50%);
+  color:var(--ink-3);font-size:.875rem;line-height:1;
+}
+/* 主役の箱を1つだけ持ち上げる。2つ以上に付けない（強調が消える） */
+.zk-node.is-key{background:var(--s2);border-color:var(--accent)}
+
+/* --- 比較（左右2枚。左=よくない例／右=直した例）-------------------------- */
+.zk-compare{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-md)}
+.zk-compare > .panel{margin:0}
+.zk-tag{
+  display:inline-block;font-family:var(--font-mono);font-size:.6875rem;
+  letter-spacing:var(--tr-eyebrow);text-transform:uppercase;
+  color:var(--ink-subtle);margin-bottom:var(--sp-xs);
+}
+.zk-tag.is-after{color:var(--accent)}
+
+/* --- 数字を1つだけ大きく出す ------------------------------------------- */
+.zk-kv{display:flex;align-items:baseline;gap:var(--sp-sm);flex-wrap:wrap}
+.zk-kv-n{font-size:clamp(2rem,4vw + .5rem,3rem);font-weight:600;
+         line-height:1;letter-spacing:var(--tr-lg)}
+.zk-kv-l{font-size:.875rem;color:var(--ink-subtle)}
+
+/* --- 補足の一言。左の1px罫だけで「引用の段」を作る --------------------- */
+.zk-note{
+  border-left:2px solid var(--accent);
+  padding:var(--sp-xs) 0 var(--sp-xs) var(--sp-md);
+  color:var(--ink-muted);font-size:.9375rem;line-height:1.6;
+}
+
+/* --- 表 -----------------------------------------------------------------
+   横に長い表はページごと横スクロールさせず、.zk-scroll の中だけで流す。 */
+.zk-scroll{overflow-x:auto}
+.zk-table{width:100%;border-collapse:collapse;font-size:.875rem;min-width:520px}
+.zk-table th,.zk-table td{
+  text-align:left;padding:10px var(--sp-sm);
+  border-bottom:1px solid var(--hair);vertical-align:top;line-height:1.55;
+}
+.zk-table thead th{
+  font-size:.75rem;font-weight:500;color:var(--ink-subtle);
+  letter-spacing:var(--tr-eyebrow);text-transform:uppercase;
+  border-bottom:1px solid var(--hair-strong);white-space:nowrap;
+}
+.zk-table tbody tr:last-child td{border-bottom:0}
+
+/* --- 印刷（紙に出す人がいるので白地に落とす）--------------------------- */
+@media print{
+  :root{--canvas:#fff;--s1:#fff;--s2:#f4f5f7;--s3:#eee;--s4:#eee;
+        --hair:#ccc;--hair-strong:#999;--hair-3:#999;
+        --ink:#000;--ink-muted:#333;--ink-subtle:#555;--ink-3:#777;
+        --panel-hi:rgba(0,0,0,0)}
+  .nav,.zk-noprint{display:none !important}
+  .section{padding-block:var(--sp-lg)}
+  .panel{break-inside:avoid}
+}
+
+@media (max-width:768px){
+  .zk-compare{grid-template-columns:1fr}
+  /* 縦積みになったら矢印も下向きにする */
+  .zk-node + .zk-node::before{
+    left:50%;top:calc(var(--sp-sm) * -1);
+    transform:translate(-50%,-2px) rotate(90deg);
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ============ NAV（テーマ3択は必須。消さない）============ -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#"><span class="brand-mark"></span>図解</a>
+    <div class="nav-actions">
+      <div class="theme-switch" role="group" aria-label="表示テーマ">
+        <button class="theme-opt" data-theme-set="system" title="システムに合わせる" aria-label="システムに合わせる">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        </button>
+        <button class="theme-opt" data-theme-set="light" title="ライト" aria-label="ライト">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        </button>
+        <button class="theme-opt" data-theme-set="dark" title="ダーク" aria-label="ダーク">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ▼ここから下を差し替える ============================================= -->
+
+<header class="section container">
+  <div class="stack-lg" style="max-width:860px">
+    <p class="eyebrow">〈分類・1〜3語〉</p>
+    <h1 class="display-lg">〈この図解のタイトル〉</h1>
+    <p class="subhead">〈1〜2文の要約。結論を先に書く〉</p>
+  </div>
+</header>
+
+<main class="container" style="padding-bottom:var(--sp-sec)">
+
+  <!-- 手順を見せるとき -->
+  <section class="zk-block">
+    <h2 class="headline">〈見出し〉</h2>
+    <div class="panel">
+      <ol class="zk-steps">
+        <li><p class="zk-step-t">〈手順1〉</p><p class="zk-step-d">〈補足〉</p></li>
+        <li><p class="zk-step-t">〈手順2〉</p><p class="zk-step-d">〈補足〉</p></li>
+        <li><p class="zk-step-t">〈手順3〉</p><p class="zk-step-d">〈補足〉</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- 流れ・仕組みを見せるとき（主役の箱にだけ is-key） -->
+  <section class="zk-block">
+    <h2 class="headline">〈見出し〉</h2>
+    <div class="zk-flow">
+      <div class="zk-node"><p class="zk-node-t">〈入口〉</p><p class="zk-node-d">〈補足〉</p></div>
+      <div class="zk-node is-key"><p class="zk-node-t">〈ここが要点〉</p><p class="zk-node-d">〈補足〉</p></div>
+      <div class="zk-node"><p class="zk-node-t">〈出口〉</p><p class="zk-node-d">〈補足〉</p></div>
+    </div>
+  </section>
+
+  <!-- 前後・良し悪しを比べるとき -->
+  <section class="zk-block">
+    <h2 class="headline">〈見出し〉</h2>
+    <div class="zk-compare">
+      <div class="panel">
+        <span class="zk-tag">Before</span>
+        <p class="body">〈よくない状態〉</p>
+      </div>
+      <div class="panel panel-lift">
+        <span class="zk-tag is-after">After</span>
+        <p class="body">〈直した状態〉</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 項目を並べて比べるとき -->
+  <section class="zk-block">
+    <h2 class="headline">〈見出し〉</h2>
+    <div class="panel">
+      <div class="zk-scroll">
+        <table class="zk-table">
+          <thead><tr><th>〈列1〉</th><th>〈列2〉</th><th>〈列3〉</th></tr></thead>
+          <tbody>
+            <tr><td>〈…〉</td><td>〈…〉</td><td>〈…〉</td></tr>
+            <tr><td>〈…〉</td><td>〈…〉</td><td>〈…〉</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 数字を1つだけ強く出すとき -->
+  <section class="zk-block">
+    <div class="panel">
+      <div class="zk-kv">
+        <span class="zk-kv-n">〈数字〉</span>
+        <span class="zk-kv-l">〈単位・説明〉</span>
+      </div>
+      <p class="zk-note" style="margin-top:var(--sp-md)">〈補足の一言〉</p>
+    </div>
+  </section>
+
+  <footer class="zk-block">
+    <p class="caption">〈出典・前提・注意書き。無ければこの行ごと消す〉</p>
+  </footer>
+
+</main>
+
+</body>
+</html>
