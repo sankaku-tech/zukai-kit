@@ -3,13 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>図解キット — AIの答えを1枚の図解にする</title>
-<meta name="description" content="AIの答えが長くて読む気にならないとき、1枚の図解HTMLに変えるためのキット。コピーして貼るだけ。">
-<meta property="og:title" content="図解キット">
-<meta property="og:description" content="AIの答えを、1枚の図解にする。コピーして貼るだけ。">
-<meta property="og:type" content="website">
+<title>全部を疑うと疲れる。疑う場所を4つに絞る — 図解の見本</title>
 
-<!-- このファイルは _build_index.py が生成する。直接編集しないこと -->
+<!--
+  ==========================================================================
+  図解キット template.html
+  --------------------------------------------------------------------------
+  AIに「HTMLで出力して」と頼んだ答えを、読める1枚に落とすための器。
+  <body> の「ここから下を差し替える」以降だけを書き換える。
+  :root のトークンと components 層、テーマ確定スクリプトは触らない。
+  土台: Linear Base v1.1（00_Context/site-design-spec参照/linear-base.html）
+  ==========================================================================
+-->
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -362,7 +367,7 @@ button,input,select,textarea{font:inherit;color:inherit}
    ★ 別ファイルにコピーするときは THEME_KEY をその画面固有の名前に変えること。
    ========================================================================== */
 (function () {
-  var THEME_KEY = 'zukai-lp-theme';
+  var THEME_KEY = 'zukai-theme';
   function readPref() {
     try { var v = localStorage.getItem(THEME_KEY);
       if (v === 'light' || v === 'dark' || v === 'system') return v; } catch (e) {}
@@ -513,68 +518,13 @@ button,input,select,textarea{font:inherit;color:inherit}
   }
 }
 </style>
-
-<style>
-/* ==========================================================================
-   配布ページ専用の層。器のトークンだけを使い、色は直接書かない
-   ========================================================================== */
-.lp-hero{padding-block:calc(var(--sp-sec) * .8) var(--sp-xl)}
-.lp-gift{
-  display:inline-flex;align-items:center;gap:var(--sp-xs);
-  font-size:.8125rem;color:var(--accent);
-  border:1px solid var(--hair-strong);border-radius:var(--r-pill);
-  padding:6px 14px;
-}
-
-/* --- コピーの箱。ページの主役なので1段持ち上げる ---------------------- */
-.lp-copy{background:var(--s2);border:1px solid var(--hair-strong);
-  border-radius:var(--r-xl);padding:var(--sp-lg);
-  box-shadow:inset 0 1px 0 var(--panel-hi)}
-.lp-btn-copy{
-  width:100%;min-height:56px;font-size:1rem;font-weight:600;
-  border-radius:var(--r-md);border:1px solid transparent;
-  background:var(--accent);color:var(--on-accent);cursor:pointer;
-  display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-xs);
-  transition:background-color .15s ease;
-}
-.lp-btn-copy:hover{background:var(--accent-hover)}
-/* コピー後は色を変えず、面と文字だけで「済んだ」を伝える。
-   成功色に変えると、有彩色が2つになって設計が崩れる */
-.lp-btn-copy.is-done{background:var(--s4);color:var(--ink);border-color:var(--hair-strong)}
-
-/* --- プロンプト本文。長いので畳んでおく ------------------------------- */
-.lp-pre{
-  margin-top:var(--sp-md);max-height:220px;overflow:auto;
-  background:var(--canvas);border:1px solid var(--hair);border-radius:var(--r-md);
-  padding:var(--sp-md);
-  font-family:var(--font-mono);font-size:.75rem;line-height:1.7;
-  color:var(--ink-muted);white-space:pre-wrap;word-break:break-word;
-}
-.lp-toggle{background:none;border:0;color:var(--ink-subtle);cursor:pointer;
-  font-size:.8125rem;padding:var(--sp-xs) 0}
-.lp-toggle:hover{color:var(--ink)}
-
-.lp-num{font-family:var(--font-mono);font-size:.75rem;color:var(--accent)}
-
-/* --- 見本ギャラリー。panel をまるごとリンクにする --------------------- */
-.lp-card{display:block;text-decoration:none;color:inherit}
-.lp-card:hover{border-color:var(--hair-strong)}
-.lp-card .card-title{margin:0}
-.lp-types{display:flex;flex-wrap:wrap;gap:6px}
-/* 型のラベルは有彩色を使わない。accent はコピーボタンだけの持ち物 */
-.lp-type{
-  font-size:.6875rem;color:var(--ink-subtle);
-  border:1px solid var(--hair);border-radius:var(--r-pill);padding:2px 10px;
-}
-.lp-foot{border-top:1px solid var(--hair);padding-block:var(--sp-xl) var(--sp-sec)}
-@media (max-width:768px){ .lp-hero{padding-block:var(--sp-xl)} }
-</style>
 </head>
 <body>
 
+<!-- ============ NAV（テーマ3択は必須。消さない）============ -->
 <nav class="nav">
   <div class="nav-inner">
-    <a class="brand" href="#"><span class="brand-mark"></span>図解キット</a>
+    <a class="brand" href="#"><span class="brand-mark"></span>図解</a>
     <div class="nav-actions">
       <div class="theme-switch" role="group" aria-label="表示テーマ">
         <button class="theme-opt" data-theme-set="system" title="システムに合わせる" aria-label="システムに合わせる">
@@ -591,218 +541,62 @@ button,input,select,textarea{font:inherit;color:inherit}
   </div>
 </nav>
 
-<header class="container lp-hero">
-  <div class="stack-lg" style="max-width:760px">
-    <span class="lp-gift">受け取ってください</span>
-    <h1 class="display-lg">AIの答えを、<br>1枚の図解にする。</h1>
-    <p class="subhead">長い回答が返ってきた直後に、下のボタンでコピーして貼るだけ。<br>インストールも登録も要りません。</p>
+
+<header class="section container">
+  <div class="stack-lg" style="max-width:860px">
+    <p class="eyebrow">検算</p>
+    <h1 class="display-lg">全部を疑うと疲れる。<br>疑う場所を4つに絞る</h1>
+    <p class="subhead">AIの答えを鵜呑みにしないために、毎回ぜんぶ調べ直す必要はありません。</p>
   </div>
 </header>
 
-<main class="container">
+<main class="container" style="padding-bottom:var(--sp-sec)">
 
-  <section class="lp-copy">
-    <button class="lp-btn-copy" id="copyBtn" type="button" data-label="プロンプトをコピーする">
-      プロンプトをコピーする
-    </button>
-    <p class="caption" style="margin-top:var(--sp-sm);text-align:center" id="copyNote">
-      押すと、下の文章がまるごとコピーされます
-    </p>
-    <button class="lp-toggle" id="peekBtn" type="button" aria-expanded="false">中身を見る ▾</button>
-    <pre class="lp-pre" id="promptBox" hidden>これまでの内容を、1枚のHTMLにまとめて出力してください。
-
-【いちばん大事なこと】
-文章をそのままHTMLに貼らないでください。段落をタグに置き換えただけのものは図解ではありません。
-まず内容の構造を見つけて、下の5つの型のうち「合うものだけ」1〜3個に流し込んでください。
-
-【型】
-1. 手順   … 順番があるとき。番号つきの縦並び
-2. 流れ   … 入口→処理→出口があるとき。横並びの箱と矢印。要点の箱だけ枠線を accent 色にする
-3. 比較   … 前後・良し悪しがあるとき。左右2枚のカード
-4. 表     … 項目×観点で並ぶとき
-5. 数字   … 効果が数字で言えるとき。数字だけ大きく出す
-迷ったら「手順」にしてください。使わない型は入れないでください。
-
-【出力の決まり】
-- HTMLファイル1枚。CSSは &lt;style&gt; に内包。外部ファイル・CDN・画像は使わない
-- 冒頭に「結論」を1〜2文で置く
-- 元の内容にない数字・手順を足さない。足りない情報があるなら、書く前に質問する
-- 箱の中の見出しは1行。説明は1文まで
-- 絵文字を装飾に使わない
-
-【見た目の決まり】
-影・グラデーションを使わない。面の色の差と1pxの線だけで階層を作る。
-有彩色は #5e6ad2 の1色だけ。角丸は 8px（カードは12px）。
-フォントは system-ui と Noto Sans JP。
-
-ダークとライトの両方に対応させ、右上に「システム / ライト / ダーク」の3択ボタンを付けてください。
-色は必ず下の変数を経由して書いてください（色を直接書かないこと）。
-
-:root{
-  --canvas:#010102; --s1:#0f1011; --s2:#141516;
-  --hair:#23252a; --hair-strong:#34343a;
-  --ink:#f7f8f8; --ink-muted:#d0d6e0; --ink-subtle:#8a8f98;
-  --accent:#5e6ad2;
-}
-:root[data-theme=&quot;light&quot;]{
-  --canvas:#ffffff; --s1:#f8f9fa; --s2:#f1f2f4;
-  --hair:#e4e6e9; --hair-strong:#d0d3d8;
-  --ink:#101113; --ink-muted:#3f434a; --ink-subtle:#6b7078;
-  --accent:#5e6ad2;
-}
-
-3択ボタンは、押した内容を localStorage に保存し、
-「システム」のときだけ端末の設定に合わせてください。
-テーマを決めるスクリプトは &lt;head&gt; の中（body より前）に置いてください。
-後ろに置くと、開いた瞬間に色がちらつきます。
-
-横に長い表は、ページごと横スクロールさせず、表の入れ物の中だけでスクロールさせてください。</pre>
+  <section class="zk-block">
+    <h2 class="headline">受け取ってから、この順で見る</h2>
+    <div class="panel">
+      <ol class="zk-steps">
+        <li>
+          <p class="zk-step-t">数字と固有名詞に線を引く</p>
+          <p class="zk-step-d">作り話が混ざるのは、ほとんどここ</p>
+        </li>
+        <li>
+          <p class="zk-step-t">「なんでそう言える？」と、そのまま聞き返す</p>
+          <p class="zk-step-d">根拠が無いときは、聞き返すと言い方が急に弱くなる。そこが目印になる</p>
+        </li>
+        <li>
+          <p class="zk-step-t">自信度を%でも出させる</p>
+          <p class="zk-step-d">自己申告なので当てにはしない。どこを見るかの目印として使う</p>
+        </li>
+        <li>
+          <p class="zk-step-t">低いところだけ、自分で調べる</p>
+          <p class="zk-step-d">全部は調べない。ここまで絞れば、残る作業はわずかで済む</p>
+        </li>
+      </ol>
+    </div>
   </section>
 
-  <section class="section">
-    <div class="stack-xl">
-      <h2 class="display-md">使い方</h2>
-      <div class="grid-3">
-        <article class="panel stack-sm">
-          <p class="lp-num">01</p>
-          <h3 class="card-title">長い答えが返ってきたら</h3>
-          <p class="body-sm muted">ChatGPT・Claude・Gemini、どれでも大丈夫です。読む気にならない長さの回答が来た、その直後に。</p>
-        </article>
-        <article class="panel stack-sm">
-          <p class="lp-num">02</p>
-          <h3 class="card-title">コピーして、そのまま送る</h3>
-          <p class="body-sm muted">上のボタンでコピーして、同じチャットに貼って送信するだけ。1回貼れば、その会話ではずっと効きます。</p>
-        </article>
-        <article class="panel stack-sm">
-          <p class="lp-num">03</p>
-          <h3 class="card-title">図解のHTMLが返ってくる</h3>
-          <p class="body-sm muted">内容に合わせて、手順・流れ・比較・表・数字のうち合う形に整理されて出てきます。</p>
-        </article>
+  <section class="zk-block">
+    <h2 class="headline">見つかる場所が変わる</h2>
+    <div class="zk-compare">
+      <div class="panel">
+        <span class="zk-tag">絞らないとき</span>
+        <p class="body">合っている前提でそのまま使う</p>
+        <p class="body-sm muted" style="margin-top:var(--sp-sm)">間違いは、人に見せたあとで見つかる。</p>
+      </div>
+      <div class="panel panel-lift">
+        <span class="zk-tag is-after">絞るとき</span>
+        <p class="body">数字と固有名詞だけを疑う</p>
+        <p class="body-sm muted" style="margin-top:var(--sp-sm)">見せる前に見つかる。</p>
       </div>
     </div>
   </section>
 
-  <section class="section">
-    <div class="stack-xl">
-      <div class="stack-sm" style="max-width:760px">
-        <h2 class="display-md">どんなものが出てくるか</h2>
-        <p class="body muted">すべて、このキットで実際に出力した1枚です。開いてそのまま読めます（右上でダーク／ライトも切り替わります）。</p>
-      </div>
-      <div class="grid-2">
-
-        <a class="panel panel-hover lp-card stack-sm" href="sample-kikikata.html">
-          <div class="lp-types"><span class="lp-type">比較</span><span class="lp-type">表</span></div>
-          <h3 class="card-title">丸投げをやめると、答えが変わる</h3>
-          <p class="body-sm muted">同じ資料を2通りの頼み方で渡すと、返ってくるものがどう変わるか。足す4つを表で並べています。</p>
-        </a>
-
-        <a class="panel panel-hover lp-card stack-sm" href="sample-giji.html">
-          <div class="lp-types"><span class="lp-type">流れ</span><span class="lp-type">手順</span></div>
-          <h3 class="card-title">録音を、そのまま議事録にしない</h3>
-          <p class="body-sm muted">入口から出口までの流れと、実際にやる4手順。一番効く1段がどこかを図で示しています。</p>
-        </a>
-
-        <a class="panel panel-hover lp-card stack-sm" href="sample-makaseru.html">
-          <div class="lp-types"><span class="lp-type">表</span><span class="lp-type">数字</span></div>
-          <h3 class="card-title">AIに任せていい仕事、まだ自分でやる仕事</h3>
-          <p class="body-sm muted">6つの仕事を、任せる／自分でやるに振り分けた表。分ける基準は1つだけです。</p>
-        </a>
-
-        <a class="panel panel-hover lp-card stack-sm" href="sample-tashikame.html">
-          <div class="lp-types"><span class="lp-type">手順</span><span class="lp-type">比較</span></div>
-          <h3 class="card-title">全部を疑うと疲れる。疑う場所を4つに絞る</h3>
-          <p class="body-sm muted">AIの答えの確かめ方。どこを見るかを絞ると、間違いが見つかる場所が変わります。</p>
-        </a>
-
-      </div>
-
-      <div class="panel stack-sm">
-        <div class="lp-types"><span class="lp-type">手順</span><span class="lp-type">流れ</span><span class="lp-type">比較</span><span class="lp-type">表</span><span class="lp-type">数字</span></div>
-        <h3 class="card-title">5つの型を1枚に全部入れた見本</h3>
-        <p class="body-sm muted">型がひととおり見たい人向け。ふだんは1枚に1〜2個までで、これは見本として全部を並べた例外です。</p>
-        <div class="row"><a class="btn btn-secondary btn-sm" href="sample.html">全部入りを開く</a></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="stack-lg" style="max-width:760px">
-      <h2 class="headline">Claude Code を使っている人へ</h2>
-      <p class="body muted">スキルとして入れておけば、毎回プロンプトを貼らなくてよくなります。<code class="mono">zukai/</code> フォルダを <code class="mono">.claude/skills/</code> にコピーして、「図解にして」と打つだけです。</p>
-      <div class="row">
-        <a class="btn btn-secondary" href="https://github.com/sankaku-tech/zukai-kit">GitHubで見る</a>
-      </div>
-    </div>
-  </section>
+  <footer class="zk-block">
+    <p class="caption">自信度の%は自己申告です。数字が高いから正しい、という意味にはなりません。低いところを見つけるための目印として使ってください。</p>
+  </footer>
 
 </main>
-
-<footer class="container lp-foot">
-  <div class="stack-sm" style="max-width:760px">
-    <p class="body-sm muted">AIが作った図解は、元の回答が正しいことを保証しません。中身は必ず自分で確かめてください。</p>
-    <p class="caption">MIT License · 自由に使って、自由に配ってもらって大丈夫です</p>
-  </div>
-</footer>
-
-<script>
-/* コピー。navigator.clipboard は https か localhost でしか動かないので、
-   落ちたときは選択+execCommand に降りる（古いブラウザ・file:// 対策）。 */
-(function () {
-  var btn = document.getElementById('copyBtn');
-  var note = document.getElementById('copyNote');
-  var box = document.getElementById('promptBox');
-  var peek = document.getElementById('peekBtn');
-
-  function fallback(text) {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.setAttribute('readonly', '');
-    ta.style.position = 'fixed'; ta.style.top = '-1000px';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    return ok;
-  }
-
-  function done(ok) {
-    if (ok) {
-      btn.textContent = 'コピーしました';
-      btn.classList.add('is-done');
-      note.textContent = 'AIのチャットに貼り付けて送ってください';
-      setTimeout(function () {
-        btn.textContent = btn.getAttribute('data-label');
-        btn.classList.remove('is-done');
-        note.textContent = '押すと、下の文章がまるごとコピーされます';
-      }, 4000);
-    } else {
-      // コピーできない環境では、せめて選択できる状態にして見せる
-      box.hidden = false;
-      peek.setAttribute('aria-expanded', 'true');
-      peek.textContent = '中身を隠す ▴';
-      note.textContent = 'コピーできませんでした。下の文章を選択してコピーしてください';
-    }
-  }
-
-  btn.addEventListener('click', function () {
-    var text = box.textContent;
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(function () { done(true); },
-                                              function () { done(fallback(text)); });
-    } else {
-      done(fallback(text));
-    }
-  });
-
-  peek.addEventListener('click', function () {
-    var open = box.hidden;
-    box.hidden = !open;
-    peek.setAttribute('aria-expanded', String(open));
-    peek.textContent = open ? '中身を隠す ▴' : '中身を見る ▾';
-  });
-})();
-</script>
 
 </body>
 </html>
